@@ -37,10 +37,6 @@ app.post('/upload-image', upload.single('image'), (req, res) => {
 // MongoDB connection
 mongoose.connect('mongodb+srv://molomjamts21:J4VXy7UgjrX32wlb@railway0.po6cf4z.mongodb.net/?retryWrites=true&w=majority&appName=railway0', {
     dbName: 'newswebsite',
-}).then(() => {
-    console.log('Connected to MongoDB');
-}).catch(err => {
-    console.error('MongoDB connection error:', err);
 });
 
 // Get all posts
@@ -52,7 +48,6 @@ app.get('/posts', async (req, res) => {
 // Get single post
 app.get('/posts/:id', async (req, res) => {
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
     res.json(post);
 });
 
@@ -60,15 +55,12 @@ app.get('/posts/:id', async (req, res) => {
 app.post('/admin/posts', adminOnly, upload.single('image'), async (req, res) => {
     try {
         const { title, content } = req.body;
-        const imageUrl = req.file
-            ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
-            : null;
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
         const post = new Post({ title, content, imageUrl });
         await post.save();
         res.status(201).json(post);
     } catch (err) {
-        console.error(err);
         res.status(500).json({ error: 'Failed to create post with image' });
     }
 });
@@ -90,7 +82,7 @@ app.post('/posts', upload.single('image'), async (req, res) => {
     }
 });
 
-// Admin token validation middleware
+// Admin token validation
 function adminOnly(req, res, next) {
     const token = req.headers['authorization'];
     if (token === `Bearer ${process.env.ADMIN_TOKEN}`) {
