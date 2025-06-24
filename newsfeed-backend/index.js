@@ -35,13 +35,9 @@ app.post('/upload-image', upload.single('image'), (req, res) => {
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'your-mongodb-connection-string', {
+mongoose.connect('mongodb+srv://molomjamts21:J4VXy7UgjrX32wlb@railway0.po6cf4z.mongodb.net/?retryWrites=true&w=majority&appName=railway0', {
     dbName: 'newswebsite',
-})
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
-
-// Get all posts
+});
 app.get('/posts', async (req, res) => {
     try {
         const posts = await Post.find().sort({ createdAt: -1 });
