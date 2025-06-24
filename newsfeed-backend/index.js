@@ -1,9 +1,10 @@
-const multer = require('multer');
-const path = require('path');
+    const multer = require('multer');
+    const path = require('path');
     const express = require('express');
     const mongoose = require('mongoose');
     const cors = require('cors');
     const Post = require('./models/Post');
+    require('dotenv').config();
     
     const app = express();
     app.use(cors());
@@ -61,6 +62,16 @@ const storage = multer.diskStorage({
     });
     
     // Admin can create post
+    app.post('/admin/posts', adminOnly, async (req, res) => {
+        try {
+          const post = new Post(req.body);
+          await post.save();
+          res.status(201).json(post);
+        } catch (err) {
+          res.status(500).json({ error: 'Failed to create post' });
+        }
+      });
+      
     app.post('/posts', async (req, res) => {
       const { title, content, token, imageUrl } = req.body;
     
@@ -77,3 +88,13 @@ const storage = multer.diskStorage({
       console.log('✅ Backend running on http://localhost:5000');
     });
     
+    function adminOnly(req, res, next) {
+        const token = req.headers['authorization'];
+      
+        if (token === `Bearer ${process.env.ADMIN_TOKEN}`) {
+          next(); // authorized
+        } else {
+          res.status(401).json({ message: 'Unauthorized: Admin token required' });
+        }
+      }
+      
