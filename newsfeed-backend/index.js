@@ -9,25 +9,24 @@
     const app = express();
     app.use(cors());
     app.use(express.json());
-
+    app.use('/uploads', express.static('uploads'));
     const fs = require('fs');
 const uploadDir = './uploads';
 if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir);
 }
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-      // Append timestamp to avoid collisions
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-  });
-  
-  const upload = multer({ storage: storage });
+    const storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, 'uploads/'); // make sure this folder exists or create it
+        },
+        filename: (req, file, cb) => {
+            // Keep original extension and add timestamp to avoid name clashes
+            cb(null, Date.now() + path.extname(file.originalname));
+        }
+    });
+
+    const upload = multer({ storage });
   
   // Serve files from uploads folder statically
   app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -62,26 +61,22 @@ const storage = multer.diskStorage({
     });
     
     // Admin can create post
-    app.post('/admin/posts', adminOnly, async (req, res) => {
+    app.post('/admin/posts', adminOnly, upload.single('image'), async (req, res) => {
         try {
-          const post = new Post(req.body);
-          await post.save();
-          res.status(201).json(post);
+            const { title, content } = req.body;
+            const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+            const post = new Post({
+                title,
+                content,
+                imageUrl,
+            });
+
+            await post.save();
+            res.status(201).json(post);
         } catch (err) {
-          res.status(500).json({ error: 'Failed to create post' });
+            res.status(500).json({ error: 'Failed to create post with image' });
         }
-      });
-      
-    app.post('/posts', async (req, res) => {
-      const { title, content, token, imageUrl } = req.body;
-    
-      if (token !== 'admin123') {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-    
-      const post = new Post({ title, content, imageUrl });
-      await post.save();
-      res.json(post);
     });
     
     app.listen(5000, () => {
