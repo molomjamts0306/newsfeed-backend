@@ -14,6 +14,11 @@ app.use(express.json());
 // Multer setup to store image in memory (no disk)
 const upload = multer({ storage: multer.memoryStorage() });
 
+mongoose.connect('mongodb+srv://molomjamts21:J4VXy7UgjrX32wlb@railway0.po6cf4z.mongodb.net/?retryWrites=true&w=majority&appName=railway0', {
+    dbName: 'newswebsite',
+});
+
+
 // ImgBB upload route
 app.post('/upload-image', upload.single('image'), async (req, res) => {
     try {
@@ -88,15 +93,6 @@ app.get('/posts/:id', async (req, res) => {
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    dbName: 'newswebsite',
-}).then(() => {
-    console.log('✅ Connected to MongoDB');
-}).catch(err => {
-    console.error('❌ MongoDB connection error:', err);
-});
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
