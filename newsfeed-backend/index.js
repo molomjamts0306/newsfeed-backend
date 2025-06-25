@@ -66,12 +66,9 @@ app.post('/admin/posts', adminOnly, upload.single('image'), async (req, res) => 
 });
 
 // Public post creation (no auth required)
-app.post('/posts', upload.single('image'), async (req, res) => {
+app.post('/posts', async (req, res) => {
     try {
-        const { title, content } = req.body;
-        const imageUrl = req.file
-            ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
-            : null;
+        const { title, content, imageUrl } = req.body;
 
         const post = new Post({ title, content, imageUrl });
         await post.save();
