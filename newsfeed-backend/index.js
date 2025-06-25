@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const Post = require('./models/Post');
 const fs = require('fs');
-require('dotenv').config();
 
 const app = express();
 const uploadDir = './uploads';
@@ -52,18 +51,18 @@ app.get('/posts/:id', async (req, res) => {
 });
 
 // Admin-only post creation
-app.post('/admin/posts', adminOnly, upload.single('image'), async (req, res) => {
-    try {
-        const { title, content } = req.body;
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
-        const post = new Post({ title, content, imageUrl });
-        await post.save();
-        res.status(201).json(post);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to create post with image' });
-    }
-});
+// app.post('/admin/posts', upload.single('image'), async (req, res) => {
+//     try {
+//         const { title, content } = req.body;
+//         const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+//
+//         const post = new Post({ title, content, imageUrl });
+//         await post.save();
+//         res.status(201).json(post);
+//     } catch (err) {
+//         res.status(500).json({ error: 'Failed to create post with image' });
+//     }
+// });
 
 // Public post creation (no auth required)
 app.post('/posts', upload.single('image'), async (req, res) => {
@@ -81,16 +80,6 @@ app.post('/posts', upload.single('image'), async (req, res) => {
         res.status(500).json({ error: 'Failed to create post' });
     }
 });
-
-// Admin token validation
-function adminOnly(req, res, next) {
-    const token = req.headers['authorization'];
-    if (token === `Bearer ${process.env.ADMIN_TOKEN}`) {
-        next();
-    } else {
-        res.status(401).json({ message: 'Unauthorized: Admin token required' });
-    }
-}
 
 // Start server
 const port = process.env.PORT || 5000;
