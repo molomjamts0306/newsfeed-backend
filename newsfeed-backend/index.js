@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const Post = require('./models/Post');
 const axios = require('axios');
+const qs = require('qs'); // For URL encoding
 require('dotenv').config();
 
 const app = express();
@@ -18,7 +19,6 @@ mongoose.connect('mongodb+srv://molomjamts21:J4VXy7UgjrX32wlb@railway0.po6cf4z.m
     dbName: 'newswebsite',
 });
 
-
 // ImgBB upload route
 app.post('/upload-image', upload.single('image'), async (req, res) => {
     try {
@@ -30,10 +30,12 @@ app.post('/upload-image', upload.single('image'), async (req, res) => {
         // ImgBB API endpoint with your API key from env
         const imgbbApi = `https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`;
 
-        // POST to ImgBB with base64 image
-        const response = await axios.post(imgbbApi, {
+        // POST to ImgBB with base64 image using URL encoded format
+        const response = await axios.post(imgbbApi, qs.stringify({
             image: base64Image,
             name: `upload_${Date.now()}`
+        }), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
 
         const imageUrl = response.data.data.url;
@@ -51,12 +53,13 @@ app.post('/posts', upload.single('image'), async (req, res) => {
         let imageUrl = null;
 
         if (req.file) {
-            // Upload image to ImgBB (same code as above)
             const base64Image = req.file.buffer.toString('base64');
             const imgbbApi = `https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`;
-            const response = await axios.post(imgbbApi, {
+            const response = await axios.post(imgbbApi, qs.stringify({
                 image: base64Image,
                 name: `upload_${Date.now()}`
+            }), {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             });
             imageUrl = response.data.data.url;
         }
@@ -91,8 +94,6 @@ app.get('/posts/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch post' });
     }
 });
-
-// MongoDB connection
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
